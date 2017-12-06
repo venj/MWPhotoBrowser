@@ -73,3 +73,7 @@
 - (void)showPreviousPhotoAnimated:(BOOL)animated;
 
 @end
+
+@interface UIViewController(MWExtension)
+- (UIInterfaceOrientation)mw_interfaceOrientation;
+@end

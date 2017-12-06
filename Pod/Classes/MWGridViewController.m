@@ -54,10 +54,6 @@
     return self;
 }
 
-- (UIInterfaceOrientation)mw_interfaceOrientation {
-    return [[UIApplication sharedApplication] statusBarOrientation];
-}
-
 #pragma mark - View
 
 - (void)viewDidLoad {

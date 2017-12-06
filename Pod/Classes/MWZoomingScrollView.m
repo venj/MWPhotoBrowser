@@ -270,26 +270,12 @@
         maxScale = 4;
     }
     
-    // Image is smaller than screen so no zooming!
-    if (xScale >= 1 && yScale >= 1) {
-        minScale = 1.0;
-    }
-    
     // Set min/max zoom
     self.maximumZoomScale = maxScale;
     self.minimumZoomScale = minScale;
     
     // Initial zoom
     self.zoomScale = [self initialZoomScaleWithMinScale];
-    
-    // If we're zooming to fill then centralise
-    if (self.zoomScale != minScale) {
-        
-        // Centralise
-        self.contentOffset = CGPointMake((imageSize.width * self.zoomScale - boundsSize.width) / 2.0,
-                                         (imageSize.height * self.zoomScale - boundsSize.height) / 2.0);
-
-    }
     
     // Disable scrolling initially until the first pinch to fix issues with swiping on an initally zoomed in photo
     self.scrollEnabled = NO;
@@ -377,10 +363,6 @@
 
 #pragma mark - Tap Detection
 
-- (void)handleSingleTap:(CGPoint)touchPoint {
-	[_photoBrowser performSelector:@selector(toggleControls) withObject:nil afterDelay:0.2];
-}
-
 - (void)handleDoubleTap:(CGPoint)touchPoint {
     
     // Dont double tap to zoom if showing a video
@@ -413,8 +395,8 @@
 }
 
 // Image View
-- (void)imageView:(UIImageView *)imageView singleTapDetected:(UITouch *)touch { 
-    [self handleSingleTap:[touch locationInView:imageView]];
+- (void)imageView:(UIImageView *)imageView singleTapDetected:(UITouch *)touch {
+    [self view:imageView.window singleTapDetected:touch];
 }
 - (void)imageView:(UIImageView *)imageView doubleTapDetected:(UITouch *)touch {
     [self handleDoubleTap:[touch locationInView:imageView]];
@@ -422,24 +404,32 @@
 
 // Background View
 - (void)view:(UIView *)view singleTapDetected:(UITouch *)touch {
-    // Translate touch location to image view location
+    CGFloat touchX = [touch locationInView:view].x;
+    CGFloat width = view.frame.size.width;
+    if (touchX < width * 0.25 && touch.tapCount == 1) {
+        [_photoBrowser showPreviousPhotoAnimated:NO];
+    }
+    else if (touchX > width * 0.75 && touch.tapCount == 1)  {
+        [_photoBrowser showNextPhotoAnimated:NO];
+    }
+    else if (touch.tapCount == 1) {
+        [_photoBrowser performSelector:@selector(toggleControls) withObject:nil afterDelay:0.2];
+    }
+}
+
+- (CGPoint)translateLocationOfTouch:(UITouch *)touch inView:(UIView *)view {
     CGFloat touchX = [touch locationInView:view].x;
     CGFloat touchY = [touch locationInView:view].y;
     touchX *= 1/self.zoomScale;
     touchY *= 1/self.zoomScale;
     touchX += self.contentOffset.x;
     touchY += self.contentOffset.y;
-    [self handleSingleTap:CGPointMake(touchX, touchY)];
+    return CGPointMake(touchX, touchY);
 }
 - (void)view:(UIView *)view doubleTapDetected:(UITouch *)touch {
     // Translate touch location to image view location
-    CGFloat touchX = [touch locationInView:view].x;
-    CGFloat touchY = [touch locationInView:view].y;
-    touchX *= 1/self.zoomScale;
-    touchY *= 1/self.zoomScale;
-    touchX += self.contentOffset.x;
-    touchY += self.contentOffset.y;
-    [self handleDoubleTap:CGPointMake(touchX, touchY)];
+    CGPoint location = [self translateLocationOfTouch:touch inView:view];
+    [self handleDoubleTap:location];
 }
 
 @end

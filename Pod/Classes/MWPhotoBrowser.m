@@ -1141,10 +1141,16 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)showPreviousPhotoAnimated:(BOOL)animated {
+    if (_currentPageIndex == 0) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+    }
     [self jumpToPageAtIndex:_currentPageIndex-1 animated:animated];
 }
 
 - (void)showNextPhotoAnimated:(BOOL)animated {
+    if (self.numberOfPhotos == _currentPageIndex - 1) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+    }
     [self jumpToPageAtIndex:_currentPageIndex+1 animated:animated];
 }
 

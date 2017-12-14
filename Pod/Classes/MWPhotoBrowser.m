@@ -17,10 +17,7 @@
 
 static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
-@implementation MWPhotoBrowser {
-    BOOL _shouldPostNoMorePhotosOnScollDeceleration;
-}
-
+@implementation MWPhotoBrowser
 #pragma mark - Init
 
 - (id)init {
@@ -83,7 +80,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _thumbPhotos = [[NSMutableArray alloc] init];
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
-    _shouldPostNoMorePhotosOnScollDeceleration = NO;
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -1065,11 +1061,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	if (_currentPageIndex != previousCurrentPage) {
         [self didStartViewingPageAtIndex:index];
     }
-    else {
-        if (_currentPageIndex == 0 || _currentPageIndex == ([self numberOfPhotos] - 1)) {
-            _shouldPostNoMorePhotosOnScollDeceleration = YES;
-        }
-    }
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -1079,10 +1070,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
 	// Update nav when page changes
-    if (_shouldPostNoMorePhotosOnScollDeceleration) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
-    }
-    _shouldPostNoMorePhotosOnScollDeceleration = NO;
 	[self updateNavigation];
 }
 

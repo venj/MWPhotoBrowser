@@ -17,7 +17,9 @@
 
 static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
-@implementation MWPhotoBrowser
+@implementation MWPhotoBrowser {
+    BOOL _shouldPostNoMorePhotosOnScollDeceleration;
+}
 
 #pragma mark - Init
 
@@ -81,6 +83,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _thumbPhotos = [[NSMutableArray alloc] init];
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
+    _shouldPostNoMorePhotosOnScollDeceleration = NO;
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -1062,7 +1065,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	if (_currentPageIndex != previousCurrentPage) {
         [self didStartViewingPageAtIndex:index];
     }
-	
+    else {
+        if (_currentPageIndex == 0 || _currentPageIndex == ([self numberOfPhotos] - 1)) {
+            _shouldPostNoMorePhotosOnScollDeceleration = YES;
+        }
+    }
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -1072,6 +1079,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
 	// Update nav when page changes
+    if (_shouldPostNoMorePhotosOnScollDeceleration) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+    }
+    _shouldPostNoMorePhotosOnScollDeceleration = NO;
 	[self updateNavigation];
 }
 
@@ -1120,7 +1131,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)jumpToPageAtIndex:(NSUInteger)index animated:(BOOL)animated {
-	
+
+    if (_currentPageIndex == 0 || _currentPageIndex == ([self numberOfPhotos] - 1)) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+    }
+
 	// Change page
 	if (index < [self numberOfPhotos]) {
 		CGRect pageFrame = [self frameForPageAtIndex:index];
@@ -1141,16 +1156,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)showPreviousPhotoAnimated:(BOOL)animated {
-    if (_currentPageIndex == 0) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
-    }
     [self jumpToPageAtIndex:_currentPageIndex-1 animated:animated];
 }
 
 - (void)showNextPhotoAnimated:(BOOL)animated {
-    if (self.numberOfPhotos == _currentPageIndex - 1) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
-    }
     [self jumpToPageAtIndex:_currentPageIndex+1 animated:animated];
 }
 

@@ -102,6 +102,7 @@
 - (void)setup {
     _assetRequestID = PHInvalidImageRequestID;
     _assetVideoRequestID = PHInvalidImageRequestID;
+    _allowInvalidSSLCertificatesForImageDownloading = YES;
 }
 
 - (void)dealloc {
@@ -212,8 +213,9 @@
 - (void)_performLoadUnderlyingImageAndNotifyWithWebURL:(NSURL *)url {
     @try {
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
+        SDWebImageOptions options = [self allowInvalidSSLCertificatesForImageDownloading] ? SDWebImageAllowInvalidSSLCertificates : 0;
         _webImageOperation = [manager loadImageWithURL:url
-                                               options:SDWebImageAllowInvalidSSLCertificates
+                                               options:options
                                               progress:^(NSInteger receivedSize, NSInteger expectedSize, NSURL *targetURL) {
                                                   if (expectedSize > 0) {
                                                       float progress = receivedSize / (float)expectedSize;

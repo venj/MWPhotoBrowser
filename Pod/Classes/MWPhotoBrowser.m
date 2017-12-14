@@ -1132,10 +1132,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)jumpToPageAtIndex:(NSUInteger)index animated:(BOOL)animated {
 
-    if (_currentPageIndex == 0 || _currentPageIndex == ([self numberOfPhotos] - 1)) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
-    }
-
 	// Change page
 	if (index < [self numberOfPhotos]) {
 		CGRect pageFrame = [self frameForPageAtIndex:index];
@@ -1156,10 +1152,18 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)showPreviousPhotoAnimated:(BOOL)animated {
+    if (_currentPageIndex == 0) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+        return;
+    }
     [self jumpToPageAtIndex:_currentPageIndex-1 animated:animated];
 }
 
 - (void)showNextPhotoAnimated:(BOOL)animated {
+    if (_currentPageIndex == [self numberOfPhotos] - 1) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_NO_MORE_PHOTOS_NOTIFICATION object:nil];
+        return;
+    }
     [self jumpToPageAtIndex:_currentPageIndex+1 animated:animated];
 }
 

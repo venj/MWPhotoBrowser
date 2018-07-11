@@ -13,14 +13,11 @@
 #import "MWPhoto.h"
 #import "MWPhotoBrowser.h"
 
-@interface MWPhoto () {
-
-    BOOL _loadingInProgress;
-    id <SDWebImageOperation> _webImageOperation;
-    PHImageRequestID _assetRequestID;
-    PHImageRequestID _assetVideoRequestID;
-        
-}
+@interface MWPhoto ()
+@property (nonatomic) BOOL loadingInProgress;
+@property (nonatomic, strong) id <SDWebImageOperation> webImageOperation;
+@property (nonatomic) PHImageRequestID assetRequestID;
+@property (nonatomic) PHImageRequestID assetVideoRequestID;
 
 @property (nonatomic, strong) UIImage *image;
 @property (nonatomic, strong) NSURL *photoURL;
@@ -100,8 +97,8 @@
 }
 
 - (void)setup {
-    _assetRequestID = PHInvalidImageRequestID;
-    _assetVideoRequestID = PHInvalidImageRequestID;
+    self.assetRequestID = PHInvalidImageRequestID;
+    self.assetVideoRequestID = PHInvalidImageRequestID;
     _allowInvalidSSLCertificatesForImageDownloading = YES;
 }
 
@@ -117,19 +114,19 @@
 }
 
 - (void)getVideoURL:(void (^)(NSURL *url))completion {
-    if (_videoURL) {
-        completion(_videoURL);
-    } else if (_asset && _asset.mediaType == PHAssetMediaTypeVideo) {
+    if (self.videoURL) {
+        completion(self.videoURL);
+    } else if (self.asset && self.asset.mediaType == PHAssetMediaTypeVideo) {
         [self cancelVideoRequest]; // Cancel any existing
         PHVideoRequestOptions *options = [PHVideoRequestOptions new];
         options.networkAccessAllowed = YES;
         typeof(self) __weak weakSelf = self;
-        _assetVideoRequestID = [[PHImageManager defaultManager] requestAVAssetForVideo:_asset options:options resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info) {
+        self.assetVideoRequestID = [[PHImageManager defaultManager] requestAVAssetForVideo:self.asset options:options resultHandler:^(AVAsset *asset, AVAudioMix *audioMix, NSDictionary *info) {
             
             // dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ // Testing
             typeof(self) strongSelf = weakSelf;
             if (!strongSelf) return;
-            strongSelf->_assetVideoRequestID = PHInvalidImageRequestID;
+            strongSelf.assetVideoRequestID = PHInvalidImageRequestID;
             if ([asset isKindOfClass:[AVURLAsset class]]) {
                 completion(((AVURLAsset *)asset).URL);
             } else {
@@ -148,8 +145,8 @@
 
 - (void)loadUnderlyingImageAndNotify {
     NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
-    if (_loadingInProgress) return;
-    _loadingInProgress = YES;
+    if (self.loadingInProgress) return;
+    self.loadingInProgress = YES;
     @try {
         if (self.underlyingImage) {
             [self imageLoadingComplete];
@@ -159,7 +156,7 @@
     }
     @catch (NSException *exception) {
         self.underlyingImage = nil;
-        _loadingInProgress = NO;
+        self.loadingInProgress = NO;
         [self imageLoadingComplete];
     }
     @finally {
@@ -170,21 +167,21 @@
 - (void)performLoadUnderlyingImageAndNotify {
     
     // Get underlying image
-    if (_image) {
+    if (self.image) {
         
         // We have UIImage!
         self.underlyingImage = _image;
         [self imageLoadingComplete];
         
-    } else if (_photoURL) {
+    } else if (self.photoURL) {
         
         // Check what type of url it is
-        if ([[[_photoURL scheme] lowercaseString] isEqualToString:@"assets-library"]) {
+        if ([[[self.photoURL scheme] lowercaseString] isEqualToString:@"assets-library"]) {
             
             // Load from assets library
             [self _performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL: _photoURL];
             
-        } else if ([_photoURL isFileReferenceURL]) {
+        } else if ([self.photoURL isFileReferenceURL]) {
             
             // Load from local file async
             [self _performLoadUnderlyingImageAndNotifyWithLocalFileURL: _photoURL];
@@ -196,10 +193,10 @@
             
         }
         
-    } else if (_asset) {
+    } else if (self.asset) {
         
         // Load from photos asset
-        [self _performLoadUnderlyingImageAndNotifyWithAsset: _asset targetSize:_assetTargetSize];
+        [self _performLoadUnderlyingImageAndNotifyWithAsset: self.asset targetSize:self.assetTargetSize];
         
     } else {
         
@@ -211,17 +208,19 @@
 
 // Load from local file
 - (void)_performLoadUnderlyingImageAndNotifyWithWebURL:(NSURL *)url {
+    __weak typeof(self) weakSelf = self;
     @try {
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
         SDWebImageOptions options = [self allowInvalidSSLCertificatesForImageDownloading] ? SDWebImageAllowInvalidSSLCertificates : 0;
-        _webImageOperation = [manager loadImageWithURL:url
+        self.webImageOperation = [manager loadImageWithURL:url
                                                options:options
                                               progress:^(NSInteger receivedSize, NSInteger expectedSize, NSURL *targetURL) {
+                                                  typeof(self) strongSelf = weakSelf;
                                                   if (expectedSize > 0) {
                                                       float progress = receivedSize / (float)expectedSize;
                                                       NSDictionary* dict = [NSDictionary dictionaryWithObjectsAndKeys:
                                                                             [NSNumber numberWithFloat:progress], @"progress",
-                                                                            self, @"photo", nil];
+                                                                            strongSelf, @"photo", nil];
                                                       [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_PROGRESS_NOTIFICATION object:dict];
                                                   }
                                               }
@@ -229,26 +228,30 @@
                                                  if (error) {
                                                      MWLog(@"SDWebImage failed to download image: %@", error);
                                                  }
-                                                 _webImageOperation = nil;
-                                                 self.underlyingImage = image;
+                                                 typeof(self) strongSelf = weakSelf;
+                                                 strongSelf.webImageOperation = nil;
+                                                 strongSelf.underlyingImage = image;
                                                  dispatch_async(dispatch_get_main_queue(), ^{
-                                                     [self imageLoadingComplete];
+                                                     [strongSelf imageLoadingComplete];
                                                  });
                                              }];
     } @catch (NSException *e) {
         MWLog(@"Photo from web: %@", e);
-        _webImageOperation = nil;
-        [self imageLoadingComplete];
+        typeof(self) strongSelf = weakSelf;
+        strongSelf.webImageOperation = nil;
+        [strongSelf imageLoadingComplete];
     }
 }
 
 // Load from local file
 - (void)_performLoadUnderlyingImageAndNotifyWithLocalFileURL:(NSURL *)url {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @autoreleasepool {
             @try {
-                self.underlyingImage = [UIImage imageWithContentsOfFile:url.path];
-                if (!_underlyingImage) {
+                __weak typeof(self) strongSelf = weakSelf;
+                strongSelf.underlyingImage = [UIImage imageWithContentsOfFile:url.path];
+                if (!strongSelf.underlyingImage) {
                     MWLog(@"Error loading photo from path: %@", url.path);
                 }
             } @finally {
@@ -260,27 +263,31 @@
 
 // Load from asset library async
 - (void)_performLoadUnderlyingImageAndNotifyWithAssetsLibraryURL:(NSURL *)url {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         @autoreleasepool {
             @try {
                 ALAssetsLibrary *assetslibrary = [[ALAssetsLibrary alloc] init];
                 [assetslibrary assetForURL:url
                                resultBlock:^(ALAsset *asset){
+                                   typeof(self) strongSelf = weakSelf;
                                    ALAssetRepresentation *rep = [asset defaultRepresentation];
                                    CGImageRef iref = [rep fullScreenImage];
                                    if (iref) {
-                                       self.underlyingImage = [UIImage imageWithCGImage:iref];
+                                       strongSelf.underlyingImage = [UIImage imageWithCGImage:iref];
                                    }
-                                   [self performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
+                                   [strongSelf performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
                                }
                               failureBlock:^(NSError *error) {
-                                  self.underlyingImage = nil;
+                                  typeof(self) strongSelf = weakSelf;
+                                  strongSelf.underlyingImage = nil;
                                   MWLog(@"Photo from asset library error: %@",error);
-                                  [self performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
+                                  [strongSelf performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
                               }];
             } @catch (NSException *e) {
                 MWLog(@"Photo from asset library error: %@", e);
-                [self performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
+                typeof(self) strongSelf = weakSelf;
+                [strongSelf performSelectorOnMainThread:@selector(imageLoadingComplete) withObject:nil waitUntilDone:NO];
             }
         }
     });
@@ -302,11 +309,12 @@
                               self, @"photo", nil];
         [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_PROGRESS_NOTIFICATION object:dict];
     };
-    
-    _assetRequestID = [imageManager requestImageForAsset:asset targetSize:targetSize contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage *result, NSDictionary *info) {
+    __weak typeof(self) weakSelf = self;
+    self.assetRequestID = [imageManager requestImageForAsset:asset targetSize:targetSize contentMode:PHImageContentModeAspectFit options:options resultHandler:^(UIImage *result, NSDictionary *info) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.underlyingImage = result;
-            [self imageLoadingComplete];
+            typeof(self) strongSelf = weakSelf;
+            strongSelf.underlyingImage = result;
+            [strongSelf imageLoadingComplete];
         });
     }];
 
@@ -314,14 +322,14 @@
 
 // Release if we can get it again from path or url
 - (void)unloadUnderlyingImage {
-    _loadingInProgress = NO;
+    self.loadingInProgress = NO;
 	self.underlyingImage = nil;
 }
 
 - (void)imageLoadingComplete {
     NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
     // Complete so notify
-    _loadingInProgress = NO;
+    self.loadingInProgress = NO;
     // Notify on next run loop
     [self performSelector:@selector(postCompleteNotification) withObject:nil afterDelay:0];
 }
@@ -332,25 +340,25 @@
 }
 
 - (void)cancelAnyLoading {
-    if (_webImageOperation != nil) {
-        [_webImageOperation cancel];
-        _loadingInProgress = NO;
+    if (self.webImageOperation != nil) {
+        [self.webImageOperation cancel];
+        self.loadingInProgress = NO;
     }
     [self cancelImageRequest];
     [self cancelVideoRequest];
 }
 
 - (void)cancelImageRequest {
-    if (_assetRequestID != PHInvalidImageRequestID) {
-        [[PHImageManager defaultManager] cancelImageRequest:_assetRequestID];
-        _assetRequestID = PHInvalidImageRequestID;
+    if (self.assetRequestID != PHInvalidImageRequestID) {
+        [[PHImageManager defaultManager] cancelImageRequest:self.assetRequestID];
+        self.assetRequestID = PHInvalidImageRequestID;
     }
 }
 
 - (void)cancelVideoRequest {
-    if (_assetVideoRequestID != PHInvalidImageRequestID) {
-        [[PHImageManager defaultManager] cancelImageRequest:_assetVideoRequestID];
-        _assetVideoRequestID = PHInvalidImageRequestID;
+    if (self.assetVideoRequestID != PHInvalidImageRequestID) {
+        [[PHImageManager defaultManager] cancelImageRequest:self.assetVideoRequestID];
+        self.assetVideoRequestID = PHInvalidImageRequestID;
     }
 }
 

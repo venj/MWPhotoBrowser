@@ -14,16 +14,12 @@
 
 #define VIDEO_INDICATOR_PADDING 10
 
-@interface MWGridCell () {
-    
-    UIImageView *_imageView;
-    UIImageView *_videoIndicator;
-    UIImageView *_loadingError;
-	DACircularProgressView *_loadingIndicator;
-    UIButton *_selectedButton;
-    
-}
-
+@interface MWGridCell ()
+@property (nonatomic, strong) UIImageView *imageView;
+@property (nonatomic, strong) UIImageView *videoIndicator;
+@property (nonatomic, strong) UIImageView *loadingError;
+@property (nonatomic, strong) DACircularProgressView *loadingIndicator;
+@property (nonatomic, strong) UIButton *selectedButton;
 @end
 
 @implementation MWGridCell
@@ -35,39 +31,39 @@
         self.backgroundColor = [UIColor colorWithWhite:0.12 alpha:1];
         
         // Image
-        _imageView = [UIImageView new];
-        _imageView.frame = self.bounds;
-        _imageView.contentMode = UIViewContentModeScaleAspectFill;
-        _imageView.clipsToBounds = YES;
-        _imageView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-        [self addSubview:_imageView];
+        self.imageView = [UIImageView new];
+        self.imageView.frame = self.bounds;
+        self.imageView.contentMode = UIViewContentModeScaleAspectFill;
+        self.imageView.clipsToBounds = YES;
+        self.imageView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+        [self addSubview:self.imageView];
         
         // Video Image
-        _videoIndicator = [UIImageView new];
-        _videoIndicator.hidden = NO;
+        self.videoIndicator = [UIImageView new];
+        self.videoIndicator.hidden = NO;
         UIImage *videoIndicatorImage = [UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/VideoOverlay" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]];
-        _videoIndicator.frame = CGRectMake(self.bounds.size.width - videoIndicatorImage.size.width - VIDEO_INDICATOR_PADDING, self.bounds.size.height - videoIndicatorImage.size.height - VIDEO_INDICATOR_PADDING, videoIndicatorImage.size.width, videoIndicatorImage.size.height);
-        _videoIndicator.image = videoIndicatorImage;
-        _videoIndicator.autoresizesSubviews = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
-        [self addSubview:_videoIndicator];
+        self.videoIndicator.frame = CGRectMake(self.bounds.size.width - videoIndicatorImage.size.width - VIDEO_INDICATOR_PADDING, self.bounds.size.height - videoIndicatorImage.size.height - VIDEO_INDICATOR_PADDING, videoIndicatorImage.size.width, videoIndicatorImage.size.height);
+        self.videoIndicator.image = videoIndicatorImage;
+        self.videoIndicator.autoresizesSubviews = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
+        [self addSubview:self.videoIndicator];
         
         // Selection button
-        _selectedButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        _selectedButton.contentMode = UIViewContentModeTopRight;
-        _selectedButton.adjustsImageWhenHighlighted = NO;
-        [_selectedButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageSelectedSmallOff" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateNormal];
-        [_selectedButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageSelectedSmallOn" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateSelected];
-        [_selectedButton addTarget:self action:@selector(selectionButtonPressed) forControlEvents:UIControlEventTouchDown];
-        _selectedButton.hidden = YES;
-        _selectedButton.frame = CGRectMake(0, 0, 44, 44);
-        [self addSubview:_selectedButton];
+        self.selectedButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.selectedButton.contentMode = UIViewContentModeTopRight;
+        self.selectedButton.adjustsImageWhenHighlighted = NO;
+        [self.selectedButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageSelectedSmallOff" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateNormal];
+        [self.selectedButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageSelectedSmallOn" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateSelected];
+        [self.selectedButton addTarget:self action:@selector(selectionButtonPressed) forControlEvents:UIControlEventTouchDown];
+        self.selectedButton.hidden = YES;
+        self.selectedButton.frame = CGRectMake(0, 0, 44, 44);
+        [self addSubview:self.selectedButton];
     
 		// Loading indicator
-		_loadingIndicator = [[DACircularProgressView alloc] initWithFrame:CGRectMake(0, 0, 40.0f, 40.0f)];
-        _loadingIndicator.userInteractionEnabled = NO;
-        _loadingIndicator.thicknessRatio = 0.1;
-        _loadingIndicator.roundedCorners = NO;
-		[self addSubview:_loadingIndicator];
+		self.loadingIndicator = [[DACircularProgressView alloc] initWithFrame:CGRectMake(0, 0, 40.0f, 40.0f)];
+        self.loadingIndicator.userInteractionEnabled = NO;
+        self.loadingIndicator.thicknessRatio = 0.1;
+        self.loadingIndicator.roundedCorners = NO;
+		[self addSubview:self.loadingIndicator];
         
         // Listen for photo loading notifications
         [[NSNotificationCenter defaultCenter] addObserver:self
@@ -90,8 +86,8 @@
 - (void)setGridController:(MWGridViewController *)gridController {
     _gridController = gridController;
     // Set custom selection image if required
-    if (_gridController.browser.customImageSelectedSmallIconName) {
-        [_selectedButton setImage:[UIImage imageNamed:_gridController.browser.customImageSelectedSmallIconName] forState:UIControlStateSelected];
+    if (self.gridController.browser.customImageSelectedSmallIconName) {
+        [self.selectedButton setImage:[UIImage imageNamed:self.gridController.browser.customImageSelectedSmallIconName] forState:UIControlStateSelected];
     }
 }
 
@@ -99,23 +95,23 @@
 
 - (void)layoutSubviews {
     [super layoutSubviews];
-    _imageView.frame = self.bounds;
-    _loadingIndicator.frame = CGRectMake(floorf((self.bounds.size.width - _loadingIndicator.frame.size.width) / 2.),
-                                         floorf((self.bounds.size.height - _loadingIndicator.frame.size.height) / 2),
-                                         _loadingIndicator.frame.size.width,
-                                         _loadingIndicator.frame.size.height);
-    _selectedButton.frame = CGRectMake(self.bounds.size.width - _selectedButton.frame.size.width - 0,
-                                       0, _selectedButton.frame.size.width, _selectedButton.frame.size.height);
+    self.imageView.frame = self.bounds;
+    self.loadingIndicator.frame = CGRectMake(floorf((self.bounds.size.width - self.loadingIndicator.frame.size.width) / 2.),
+                                         floorf((self.bounds.size.height - self.loadingIndicator.frame.size.height) / 2),
+                                         self.loadingIndicator.frame.size.width,
+                                         self.loadingIndicator.frame.size.height);
+    self.selectedButton.frame = CGRectMake(self.bounds.size.width - self.selectedButton.frame.size.width - 0,
+                                       0, self.selectedButton.frame.size.width, self.selectedButton.frame.size.height);
 }
 
 #pragma mark - Cell
 
 - (void)prepareForReuse {
-    _photo = nil;
-    _gridController = nil;
-    _imageView.image = nil;
-    _loadingIndicator.progress = 0;
-    _selectedButton.hidden = YES;
+    self.photo = nil;
+    self.gridController = nil;
+    self.imageView.image = nil;
+    self.loadingIndicator.progress = 0;
+    self.selectedButton.hidden = YES;
     [self hideImageFailure];
     [super prepareForReuse];
 }
@@ -125,12 +121,12 @@
 - (void)setPhoto:(id <MWPhoto>)photo {
     _photo = photo;
     if ([photo respondsToSelector:@selector(isVideo)]) {
-        _videoIndicator.hidden = !photo.isVideo;
+        self.videoIndicator.hidden = !photo.isVideo;
     } else {
-        _videoIndicator.hidden = YES;
+        self.videoIndicator.hidden = YES;
     }
-    if (_photo) {
-        if (![_photo underlyingImage]) {
+    if (self.photo) {
+        if (![self.photo underlyingImage]) {
             [self showLoadingIndicator];
         } else {
             [self hideLoadingIndicator];
@@ -141,8 +137,8 @@
 }
 
 - (void)displayImage {
-    _imageView.image = [_photo underlyingImage];
-    _selectedButton.hidden = !_selectionMode;
+    self.imageView.image = [self.photo underlyingImage];
+    self.selectedButton.hidden = !self.selectionMode;
     [self hideImageFailure];
 }
 
@@ -154,86 +150,88 @@
 
 - (void)setIsSelected:(BOOL)isSelected {
     _isSelected = isSelected;
-    _selectedButton.selected = isSelected;
+    self.selectedButton.selected = isSelected;
 }
 
 - (void)selectionButtonPressed {
-    _selectedButton.selected = !_selectedButton.selected;
-    [_gridController.browser setPhotoSelected:_selectedButton.selected atIndex:_index];
+    self.selectedButton.selected = !self.selectedButton.selected;
+    [self.gridController.browser setPhotoSelected:self.selectedButton.selected atIndex:self.index];
 }
 
 #pragma mark - Touches
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    _imageView.alpha = 0.6;
+    self.imageView.alpha = 0.6;
     [super touchesBegan:touches withEvent:event];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    _imageView.alpha = 1;
+    self.imageView.alpha = 1;
     [super touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    _imageView.alpha = 1;
+    self.imageView.alpha = 1;
     [super touchesCancelled:touches withEvent:event];
 }
 
 #pragma mark Indicators
 
 - (void)hideLoadingIndicator {
-    _loadingIndicator.hidden = YES;
+    self.loadingIndicator.hidden = YES;
 }
 
 - (void)showLoadingIndicator {
-    _loadingIndicator.progress = 0;
-    _loadingIndicator.hidden = NO;
+    self.loadingIndicator.progress = 0;
+    self.loadingIndicator.hidden = NO;
     [self hideImageFailure];
 }
 
 - (void)showImageFailure {
     // Only show if image is not empty
-    if (![_photo respondsToSelector:@selector(emptyImage)] || !_photo.emptyImage) {
-        if (!_loadingError) {
-            _loadingError = [UIImageView new];
-            _loadingError.image = [UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageError" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]];
-            _loadingError.userInteractionEnabled = NO;
-            [_loadingError sizeToFit];
-            [self addSubview:_loadingError];
+    if (![self.photo respondsToSelector:@selector(emptyImage)] || !self.photo.emptyImage) {
+        if (!self.loadingError) {
+            self.loadingError = [UIImageView new];
+            self.loadingError.image = [UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/ImageError" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]];
+            self.loadingError.userInteractionEnabled = NO;
+            [self.loadingError sizeToFit];
+            [self addSubview:self.loadingError];
         }
-        _loadingError.frame = CGRectMake(floorf((self.bounds.size.width - _loadingError.frame.size.width) / 2.),
-                                         floorf((self.bounds.size.height - _loadingError.frame.size.height) / 2),
-                                         _loadingError.frame.size.width,
-                                         _loadingError.frame.size.height);
+        self.loadingError.frame = CGRectMake(floorf((self.bounds.size.width - self.loadingError.frame.size.width) / 2.),
+                                         floorf((self.bounds.size.height - self.loadingError.frame.size.height) / 2),
+                                         self.loadingError.frame.size.width,
+                                         self.loadingError.frame.size.height);
     }
     [self hideLoadingIndicator];
-    _imageView.image = nil;
+    self.imageView.image = nil;
 }
 
 - (void)hideImageFailure {
-    if (_loadingError) {
-        [_loadingError removeFromSuperview];
-        _loadingError = nil;
+    if (self.loadingError) {
+        [self.loadingError removeFromSuperview];
+        self.loadingError = nil;
     }
 }
 
 #pragma mark - Notifications
 
 - (void)setProgressFromNotification:(NSNotification *)notification {
+    __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
+        typeof(self) strongSelf = weakSelf;
         NSDictionary *dict = [notification object];
         id <MWPhoto> photoWithProgress = [dict objectForKey:@"photo"];
-        if (photoWithProgress == _photo) {
+        if (photoWithProgress == strongSelf.photo) {
 //            NSLog(@"%f", [[dict valueForKey:@"progress"] floatValue]);
             float progress = [[dict valueForKey:@"progress"] floatValue];
-            _loadingIndicator.progress = MAX(MIN(1, progress), 0);
+            strongSelf.loadingIndicator.progress = MAX(MIN(1, progress), 0);
         }
     });
 }
 
 - (void)handleMWPhotoLoadingDidEndNotification:(NSNotification *)notification {
     id <MWPhoto> photo = [notification object];
-    if (photo == _photo) {
+    if (photo == self.photo) {
         if ([photo underlyingImage]) {
             // Successful load
             [self displayImage];

@@ -13,66 +13,63 @@
 #import "MWZoomingScrollView.h"
 
 // Declare private methods of browser
-@interface MWPhotoBrowser () {
-    
-	// Data
-    NSUInteger _photoCount;
-    NSMutableArray *_photos;
-    NSMutableArray *_thumbPhotos;
-	NSArray *_fixedPhotosArray; // Provided via init
-	
-	// Views
-	UIScrollView *_pagingScrollView;
-	
-	// Paging & layout
-	NSMutableSet *_visiblePages, *_recycledPages;
-	NSUInteger _currentPageIndex;
-    NSUInteger _previousPageIndex;
-    CGRect _previousLayoutBounds;
-	NSUInteger _pageIndexBeforeRotation;
-	
-	// Navigation & controls
-	UIToolbar *_toolbar;
-	NSTimer *_controlVisibilityTimer;
-	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_doneButton;
-    MBProgressHUD *_progressHUD;
-    
-    // Grid
-    MWGridViewController *_gridController;
-    UIBarButtonItem *_gridPreviousLeftNavItem;
-    UIBarButtonItem *_gridPreviousRightNavItem;
-    
-    // Appearance
-    BOOL _previousNavBarHidden;
-    BOOL _previousNavBarTranslucent;
-    UIBarStyle _previousNavBarStyle;
-    UIStatusBarStyle _previousStatusBarStyle;
-    UIColor *_previousNavBarTintColor;
-    UIColor *_previousNavBarBarTintColor;
-    UIBarButtonItem *_previousViewControllerBackButton;
-    UIImage *_previousNavigationBarBackgroundImageDefault;
-    UIImage *_previousNavigationBarBackgroundImageLandscapePhone;
-    
-    // Video
-    MPMoviePlayerViewController *_currentVideoPlayerViewController;
-    NSUInteger _currentVideoIndex;
-    UIActivityIndicatorView *_currentVideoLoadingIndicator;
-    
-    // Misc
-    BOOL _hasBelongedToViewController;
-    BOOL _isVCBasedStatusBarAppearance;
-    BOOL _statusBarShouldBeHidden;
-    BOOL _displayActionButton;
-    BOOL _leaveStatusBarAlone;
-	BOOL _performingLayout;
-	BOOL _rotating;
-    BOOL _viewIsActive; // active as in it's in the view heirarchy
-    BOOL _didSavePreviousStateOfNavBar;
-    BOOL _skipNextPagingScrollViewPositioning;
-    BOOL _viewHasAppearedInitially;
-    CGPoint _currentGridContentOffset;
-    
-}
+@interface MWPhotoBrowser ()
+
+// Data
+@property (nonatomic) NSUInteger photoCount;
+@property (nonatomic, strong) NSMutableArray *photos;
+@property (nonatomic, strong) NSMutableArray *thumbPhotos;
+@property (nonatomic, strong) NSArray *fixedPhotosArray; // Provided via init
+
+// Views
+@property (nonatomic, strong) UIScrollView *pagingScrollView;
+
+// Paging & layout
+@property (nonatomic, strong) NSMutableSet *visiblePages, *recycledPages;
+@property (nonatomic) NSUInteger currentPageIndex;
+@property (nonatomic) NSUInteger previousPageIndex;
+@property (nonatomic) CGRect previousLayoutBounds;
+@property (nonatomic) NSUInteger pageIndexBeforeRotation;
+
+// Navigation & controls
+@property (nonatomic, strong) UIToolbar *toolbar;
+@property (nonatomic, strong) NSTimer *controlVisibilityTimer;
+@property (nonatomic, strong) UIBarButtonItem *previousButton, *nextButton, *actionButton, *doneButton;
+@property (nonatomic, strong) MBProgressHUD *progressHUD;
+
+// Grid
+@property (nonatomic, strong) MWGridViewController *gridController;
+@property (nonatomic, strong) UIBarButtonItem *gridPreviousLeftNavItem;
+@property (nonatomic, strong) UIBarButtonItem *gridPreviousRightNavItem;
+
+// Appearance
+@property (nonatomic) BOOL previousNavBarHidden;
+@property (nonatomic) BOOL previousNavBarTranslucent;
+@property (nonatomic) UIBarStyle previousNavBarStyle;
+@property (nonatomic) UIStatusBarStyle previousStatusBarStyle;
+@property (nonatomic, strong) UIColor *previousNavBarTintColor;
+@property (nonatomic, strong) UIColor *previousNavBarBarTintColor;
+@property (nonatomic, strong) UIBarButtonItem *previousViewControllerBackButton;
+@property (nonatomic, strong) UIImage *previousNavigationBarBackgroundImageDefault;
+@property (nonatomic, strong) UIImage *previousNavigationBarBackgroundImageLandscapePhone;
+
+// Video
+@property (nonatomic, strong) MPMoviePlayerViewController *currentVideoPlayerViewController;
+@property (nonatomic) NSUInteger currentVideoIndex;
+@property (nonatomic, strong) UIActivityIndicatorView *currentVideoLoadingIndicator;
+
+// Misc
+@property (nonatomic) BOOL hasBelongedToViewController;
+@property (nonatomic) BOOL isVCBasedStatusBarAppearance;
+@property (nonatomic) BOOL statusBarShouldBeHidden;
+@property (nonatomic) BOOL leaveStatusBarAlone;
+@property (nonatomic) BOOL performingLayout;
+@property (nonatomic) BOOL rotating;
+@property (nonatomic) BOOL viewIsActive; // active as in it's in the view heirarchy
+@property (nonatomic) BOOL didSavePreviousStateOfNavBar;
+@property (nonatomic) BOOL skipNextPagingScrollViewPositioning;
+@property (nonatomic) BOOL viewHasAppearedInitially;
+@property (nonatomic) CGPoint currentGridContentOffset;
 
 // Properties
 @property (nonatomic) UIActivityViewController *activityViewController;
